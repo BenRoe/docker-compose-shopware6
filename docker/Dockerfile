@@ -44,6 +44,13 @@ COPY --from=ghcr.io/shopware/shopware-cli:bin /shopware-cli /usr/local/bin/shopw
 # RUN chmod +x shopware-cli
 # RUN mv shopware-cli /usr/local/bin/
 
+# Installing PHP Redis extension
+RUN apk --no-cache add pcre-dev ${PHPIZE_DEPS} \
+  && pecl install redis \
+  && docker-php-ext-enable redis \
+  && apk del pcre-dev ${PHPIZE_DEPS} \
+  && rm -rf /tmp/pear
+
 # PHP Konfiguration
 COPY docker/php/php.ini /usr/local/etc/php/conf.d/shopware.ini
 

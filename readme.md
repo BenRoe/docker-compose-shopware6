@@ -26,14 +26,13 @@
   - [Performance-Optimierung](#performance-optimierung)
     - [1 OpCache aktivieren](#1-opcache-aktivieren)
     - [2 Redis für Sessions](#2-redis-für-sessions)
+    - [3 Redis für Cache](#3-redis-für-cache)
     - [HTTP Cache aktivieren](#http-cache-aktivieren)
     - [4 Asset Building optimieren](#4-asset-building-optimieren)
   - [Troubleshooting](#troubleshooting)
     - [Cache-Probleme](#cache-probleme)
     - [Permissions-Fehler](#permissions-fehler)
     - [MySQL Connection Error](#mysql-connection-error)
-  - [Best Practices](#best-practices)
-  - [Zusammenfassung](#zusammenfassung)
 
 
 Eine produktionsreife Docker-Setup für Shopware 6 Development mit allen benötigten Services.
@@ -288,6 +287,55 @@ framework:
 
 ```
 
+### 3 Redis für Cache
+
+```bash
+docker compose exec app bash
+composer require predis/predis
+```
+
+`.env.local`:
+
+```env
+### Redis – Datenbanken ###
+# 0 = HTTP Cache
+REDIS_URL_HTTP_CACHE=redis://redis:6379/0
+
+# 1 = Session Storage
+REDIS_URL_SESSIONS=redis://redis:6379/1
+
+# 2 = Increment Counter (z. B. User-Aktivität, Message Queue)
+REDIS_URL_INCREMENT=redis://redis:6379/2
+
+# 3 = Default Cache (App + System)
+REDIS_URL_CACHE=redis://redis:6379/3
+
+# 4 Message Queue
+REDIS_URL_MESSENGER=redis://redis:6379/4
+```
+
+```yaml
+# config/packages/cache.yaml
+framework:
+  cache:
+    app: cache.adapter.redis_tag_aware
+    system: cache.adapter.redis_tag_aware
+    default_redis_provider: '%env(resolve:REDIS_URL_CACHE)%'
+
+    # Nur zusätzliche Pools dürfen hier stehen (keine cache.app oder cache.system)
+    pools:
+      cache.custom:
+        adapters:
+          - cache.adapter.redis_tag_aware
+          - cache.adapter.filesystem
+          
+```
+
+```
+docker compose exec app bin/console cache:clear
+```
+
+
 ### HTTP Cache aktivieren
 
 ```bash
@@ -337,24 +385,3 @@ docker compose logs mysql
 docker compose exec app nc -zv mysql 3306
 
 ```
-
-## Best Practices
-
-1. **Volumes für Performance:** `vendor` und `var` als Volumes
-2. **Health Checks:** Für MySQL und OpenSearch
-3. **Separate Netzwerke:** Frontend/Backend trennen
-4. **Environment Variables:** Niemals Secrets committen
-5. **Multi-Stage Builds:** Für kleinere Images
-6. **Logging:** Strukturiertes Logging aktivieren
-7. **Monitoring:** Mit Prometheus/Grafana
-
-## Zusammenfassung
-
-Sie haben gelernt:
-
-- Vollständige Shopware 6 Docker-Umgebung
-- Development und Production Setup
-- Plugin- und Theme-Entwicklung
-- Debugging mit Xdebug
-- Backup und Restore
-- Performance-Optimierung
