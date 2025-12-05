@@ -1,0 +1,129 @@
+services:
+  # PHP-FPM für Shopware
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    volumes:
+      - ./shopware:/var/www/html
+      - /var/www/html/vendor
+      - /var/www/html/var
+    environment:
+      DATABASE_URL: mysql://shopware:shopware@mysql:3306/shopware
+      APP_URL: http://localhost:8000
+      APP_ENV: dev
+      MAILER_URL: smtp://mailhog:1025
+      OPENSEARCH_URL: http://opensearch:9200
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - shopware-network
+
+  # Nginx Webserver
+  nginx:
+    image: nginx:alpine
+    ports:
+      - '8000:80'
+    volumes:
+      - ./shopware:/var/www/html:ro
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - app
+    networks:
+      - shopware-network
+
+  # MySQL Datenbank
+  mysql:
+    image: mysql:8.0
+    ports:
+      - '3306:3306'
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: shopware
+      MYSQL_USER: shopware
+      MYSQL_PASSWORD: shopware
+    command: >
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --sql-mode="STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION"
+      --innodb-buffer-pool-size=512M
+      --max-allowed-packet=64M
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost', '-u', 'shopware', '-pshopware']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - shopware-network
+
+  # Redis für Caching
+  redis:
+    image: redis:alpine
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+    networks:
+      - shopware-network
+
+  # OpenSearch für Produktsuche
+  opensearch:
+    image: opensearchproject/opensearch:2
+    environment:
+      discovery.type: single-node
+      plugins.security.disabled: 'true'
+      OPENSEARCH_JAVA_OPTS: '-Xms512m -Xmx512m'
+    ports:
+      - '9200:9200'
+    volumes:
+      - opensearch_data:/usr/share/opensearch/data
+    networks:
+      - shopware-network
+
+  # Mailhog für E-Mail-Testing
+  mailhog:
+    image: mailhog/mailhog
+    ports:
+      - '1025:1025'
+      - '8025:8025'
+    networks:
+      - shopware-network
+
+  # Adminer für Datenbank-Management
+  adminer:
+    image: adminer
+    ports:
+      - '8080:8080'
+    environment:
+      ADMINER_DEFAULT_SERVER: mysql
+    depends_on:
+      - mysql
+    networks:
+      - shopware-network
+
+  # Node.js für Asset Building (optional)
+  node:
+    image: node:18-alpine
+    working_dir: /var/www/html
+    volumes:
+      - ./shopware:/var/www/html
+    command: sh -c "npm install && npm run watch"
+    networks:
+      - shopware-network
+    profiles:
+      - dev
+
+volumes:
+  mysql_data:
+  redis_data:
+  opensearch_data:
+
+networks:
+  shopware-network:
+    driver: bridge
