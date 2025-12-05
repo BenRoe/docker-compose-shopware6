@@ -82,31 +82,6 @@ services:
     networks:
       - shopware-network
 
-  # Adminer für Datenbank-Management
-  adminer:
-    image: adminer
-    ports:
-      - '127.0.0.1:8080:8080'
-    environment:
-      ADMINER_DEFAULT_SERVER: mysql
-      ADMINER_PLUGINS: 'tables-filter tinymce'
-    depends_on:
-      - mysql
-    networks:
-      - shopware-network
-
-  # Node.js für Asset Building (optional)
-  node:
-    image: node:18-alpine
-    working_dir: /var/www/html
-    volumes:
-      - ./src:/var/www/html
-    command: sh -c "npm install && npm run watch"
-    networks:
-      - shopware-network
-    profiles:
-      - dev
-
 volumes:
   mysql_data:
   redis_data:
