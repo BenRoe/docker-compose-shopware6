@@ -7,8 +7,8 @@ Vollständige Shopware 6 Docker-Umgebung
 - [Docker Tutorial #9: Praxis – Shopware 6 Entwicklungsumgebung mit Docker - Tutorialwelt.de](#docker-tutorial-9-praxis--shopware-6-entwicklungsumgebung-mit-docker---tutorialweltde)
   - [Projektstruktur](#projektstruktur)
   - [Installation](#installation)
-    - [1. Docker-Umgebung starten](#1-docker-umgebung-starten)
-    - [2. Shopware 6 installieren](#2-shopware-6-installieren)
+    - [1 Docker-Umgebung starten](#1-docker-umgebung-starten)
+    - [2 Shopware 6 installieren](#2-shopware-6-installieren)
     - [3. Frontend Build](#3-frontend-build)
     - [4 Zugriff](#4-zugriff)
   - [Entwickler-Workflow](#entwickler-workflow)
@@ -59,21 +59,22 @@ shopware-docker/
 
 ## Installation
 
-### 1\. Docker-Umgebung starten
+### 1 Docker-Umgebung starten
 
 ```bash
 docker compose up -d
 
 ```
 
-### 2\. Shopware 6 installieren
+### 2 Shopware 6 installieren
 
 ```bash
 # In den App-Container
 docker compose exec app bash
 
 # Shopware per Composer installieren
-composer create-project shopware/production:6.5.* .
+# composer create-project shopware/production .
+shopware-cli project create .
 
 # Oder Clone von Git
 git clone https://github.com/shopware/platform shopware6
@@ -82,13 +83,13 @@ composer install
 
 # Shopware Setup
 bin/console system:install --basic-setup --create-database
-bin/console system:generate-jwt-secret
-bin/console plugin:refresh
-bin/console theme:refresh
+shopware-cli project generate-jwt .
+# bin/console plugin:refresh
+# bin/console theme:refresh
 bin/console assets:install
 
 # Admin-User erstellen
-bin/console user:create admin admin@example.com --admin
+bin/console user:create --admin --password johndoe123 --firstName John --lastName Doe --email john@doe.com john
 
 ```
 
@@ -105,10 +106,10 @@ docker compose --profile dev up node
 
 ### 4 Zugriff
 
-*   **Storefront:** http://localhost:8000
-*   **Admin:** http://localhost:8000/admin
-*   **Mailhog:** http://localhost:8025
-*   **Adminer:** http://localhost:8080
+- Storefront: http://localhost:8000
+- Admin: http://localhost:8000/admin
+- Mailhog: http://localhost:8025
+- Adminer: http://localhost:8080 (Zugagnsdaten in .env)
 
 ## Entwickler-Workflow
 
@@ -189,12 +190,12 @@ RUN apk add --no-cache $PHPIZE_DEPS && \
 
 ### PHPStorm Konfiguration
 
-1.  Einstellungen → PHP → Servers
-2.  Name: `docker`
-3.  Host: `localhost`
-4.  Port: `8000`
-5.  Debugger: `Xdebug`
-6.  Path Mappings: `/var/www/html` → `./shopware`
+1. Einstellungen → PHP → Servers
+2. Name: `docker`
+3. Host: `localhost`
+4. Port: `8000`
+5. Debugger: `Xdebug`
+6. Path Mappings: `/var/www/html` → `./shopware`
 
 ## Production Deployment
 
@@ -291,7 +292,7 @@ framework:
 
 ### HTTP Cache aktivieren
 
-```
+```bash
 bin/console system:config:set core.httpCache.enabled true
 bin/console system:config:set core.httpCache.warmUpEnabled true
 
@@ -299,7 +300,7 @@ bin/console system:config:set core.httpCache.warmUpEnabled true
 
 ### 4 Asset Building optimieren
 
-```
+```bash
 # Production Build
 ./bin/build-storefront.sh
 
@@ -353,13 +354,12 @@ docker compose exec app nc -zv mysql 3306
 
 Sie haben gelernt:
 
-* Vollständige Shopware 6 Docker-Umgebung
-* Development und Production Setup
-* Plugin- und Theme-Entwicklung
-* Debugging mit Xdebug
-* Backup und Restore
-* Performance-Optimierung
+- Vollständige Shopware 6 Docker-Umgebung
+- Development und Production Setup
+- Plugin- und Theme-Entwicklung
+- Debugging mit Xdebug
+- Backup und Restore
+- Performance-Optimierung
 
-**Author: Andreas Lang**
-
+Author: Andreas Lang
 [Sphinx-Flashdesign.de](https://sphinx-flashdesign.de/)

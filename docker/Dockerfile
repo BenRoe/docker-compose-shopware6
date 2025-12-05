@@ -1,4 +1,4 @@
-FROM php:8.2-fpm-alpine
+FROM php:8.4-fpm-alpine
 
 # Installiere Abhängigkeiten
 RUN apk add --no-cache \
@@ -16,6 +16,7 @@ RUN apk add --no-cache \
     oniguruma-dev \
     libxml2-dev \
     nodejs \
+    jq \
     npm
 
 # PHP Extensions
@@ -35,13 +36,13 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp && \
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Shopware CLI (optional)
+COPY --from=ghcr.io/shopware/shopware-cli:bin /shopware-cli /usr/local/bin/shopware-cli
 # RUN curl -1sLf 'https://dl.cloudsmith.io/public/friendsofshopware/stable/setup.alpine.sh' | bash && \
 #     apk add shopware-cli
 
-RUN curl -1sLf \
-  'https://dl.cloudsmith.io/public/friendsofshopware/stable/setup.deb.sh' \
-  | sudo -E bash
-sudo apt install shopware-cli
+# RUN curl -L -o shopware-cli https://github.com/shopware/shopware-cli/releases/latest/download/shopware-cli-linux-amd64
+# RUN chmod +x shopware-cli
+# RUN mv shopware-cli /usr/local/bin/
 
 # PHP Konfiguration
 COPY docker/php/php.ini /usr/local/etc/php/conf.d/shopware.ini
