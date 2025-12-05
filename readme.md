@@ -1,10 +1,10 @@
-# Docker Tutorial #9: Praxis – Shopware 6 Entwicklungsumgebung mit Docker - Tutorialwelt.de
+# Vollständige Shopware 6 Docker-Umgebung
 
-Vollständige Shopware 6 Docker-Umgebung
+🚧 Diese Anleitung ist noch in der Bearbeitung!!!
 
 [SOURCE](https://tutorialwelt.de/1294/docker-tutorial-9-praxis-shopware-6-entwicklungsumgebung-mit-docker.htm)
 
-- [Docker Tutorial #9: Praxis – Shopware 6 Entwicklungsumgebung mit Docker - Tutorialwelt.de](#docker-tutorial-9-praxis--shopware-6-entwicklungsumgebung-mit-docker---tutorialweltde)
+- [Vollständige Shopware 6 Docker-Umgebung](#vollständige-shopware-6-docker-umgebung)
   - [Projektstruktur](#projektstruktur)
   - [Installation](#installation)
     - [1 Docker-Umgebung starten](#1-docker-umgebung-starten)
@@ -358,6 +358,3 @@ Sie haben gelernt:
 - Debugging mit Xdebug
 - Backup und Restore
 - Performance-Optimierung
-
-Author: Andreas Lang
-[Sphinx-Flashdesign.de](https://sphinx-flashdesign.de/)
