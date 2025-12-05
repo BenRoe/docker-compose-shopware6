@@ -51,7 +51,7 @@ shopware-docker/
 │   └── php/
 │       ├── php.ini
 │       └── php-fpm.conf
-├── shopware/
+├── src/
 │   └── (Shopware 6 Code)
 └── .env
 
@@ -108,8 +108,6 @@ docker compose --profile dev up node
 
 - Storefront: http://localhost:8000
 - Admin: http://localhost:8000/admin
-- Mailhog: http://localhost:8025
-- Adminer: http://localhost:8080 (Zugagnsdaten in .env)
 
 ## Entwickler-Workflow
 
