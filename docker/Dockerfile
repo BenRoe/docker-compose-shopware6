@@ -1,58 +1,23 @@
-FROM php:8.4-fpm-alpine
+#syntax=docker/dockerfile:1.4
 
-# Installiere Abhängigkeiten
-RUN apk add --no-cache \
-    bash \
-    git \
-    curl \
-    zip \
-    unzip \
-    libzip-dev \
-    libpng-dev \
-    libwebp-dev \
-    libjpeg-turbo-dev \
-    freetype-dev \
-    icu-dev \
-    oniguruma-dev \
-    libxml2-dev \
-    nodejs \
-    jq \
-    npm
+ARG PHP_VERSION=8.4
+FROM ghcr.io/shopware/docker-base:$PHP_VERSION-fpm AS base-image
+FROM ghcr.io/shopware/shopware-cli:latest-php-$PHP_VERSION AS shopware-cli
 
-# PHP Extensions
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp && \
-    docker-php-ext-install -j$(nproc) \
-    pdo pdo_mysql \
-    mysqli \
-    zip \
-    gd \
-    intl \
-    opcache \
-    bcmath \
-    soap \
-    mbstring
+FROM shopware-cli AS build
 
-# Composer installieren
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+ADD . /src
+WORKDIR /src
 
-# Shopware CLI (optional)
-COPY --from=ghcr.io/shopware/shopware-cli:bin /shopware-cli /usr/local/bin/shopware-cli
-# RUN curl -1sLf 'https://dl.cloudsmith.io/public/friendsofshopware/stable/setup.alpine.sh' | bash && \
-#     apk add shopware-cli
+RUN --mount=type=secret,id=packages_token,env=SHOPWARE_PACKAGES_TOKEN \
+    --mount=type=secret,id=composer_auth,dst=/src/auth.json \
+    --mount=type=cache,target=/root/.composer \
+    --mount=type=cache,target=/root/.npm \
+    /usr/local/bin/entrypoint.sh shopware-cli project ci /src
 
-# RUN curl -L -o shopware-cli https://github.com/shopware/shopware-cli/releases/latest/download/shopware-cli-linux-amd64
-# RUN chmod +x shopware-cli
-# RUN mv shopware-cli /usr/local/bin/
+FROM base-image AS final
 
-# Installing PHP Redis extension
-RUN apk --no-cache add pcre-dev ${PHPIZE_DEPS} \
-  && pecl install redis \
-  && docker-php-ext-enable redis \
-  && apk del pcre-dev ${PHPIZE_DEPS} \
-  && rm -rf /tmp/pear
-
-# PHP Konfiguration
-COPY docker/php/php.ini /usr/local/etc/php/conf.d/shopware.ini
+COPY --from=build --chown=82 --link /src /var/www/html
 
 # Working Directory
 WORKDIR /var/www/html
